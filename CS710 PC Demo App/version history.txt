@@ -1,0 +1,69 @@
+V1.21
+1. Improve HID fast mode stability
+
+V1.20
+1. Change some text in HID configuration
+
+V1.19
+1. Add Gen2x rfmode.
+
+V1.18
+1. Change warning text.
+
+V1.17
+1. Add RFID page warning when reader is in HID mode.
+
+V1.16
+1. Enhance the HID basic mode stability.
+2. Change some text.
+
+V1.15
+1. Change HID mode parameter to be more stable.
+2. Change max power display to 3200
+
+V1.14
+1. Add RFID button in Bluetooth HID configuration
+
+V1.13
+1. Add save to power up default option.
+2. Add Bluetooth HID configuration
+
+V1.12
+1. Add autoset modes selection.
+
+V1.11
+1. Add RFID update.
+
+V1.10
+1. Add only for CS710S in title.
+
+V1.9
+1. Display RFID version and check version for Atmel firmware update.
+
+V1.8
+1. Fix wrong display of multibank inventory.
+
+V1.7
+1. Fix barcode missing last character.
+
+V1.6
+1. Add atmel bootloader warning.
+
+V1.5
+1. Add 3 new rfmode.
+2. Fix cannot update atmel firmware version 2.x.x.
+
+V1.4
+1. Fix some error message bugs.
+
+V1.3
+1. Add Atmel firmware name checking.
+
+V1.2
+1. forbidden version
+
+V1.1
+1. Add model checking for bluetooth firmware.
+
+V1.0
+1. Initial version

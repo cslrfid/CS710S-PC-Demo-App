@@ -1,0 +1,29 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.27703.2026
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CS710 PC Demo App", "CS710 PC Demo App.csproj", "{88F1DBD8-830D-4201-8C62-2BEB165B67CC}"
+EndProject
+Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "CS710 PC Demo App Installer", "..\CS710 PC Demo App Installer\CS710 PC Demo App Installer.vdproj", "{1ABC5F49-06BB-4F24-84F6-3F24AB9A4912}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x86 = Debug|x86
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{88F1DBD8-830D-4201-8C62-2BEB165B67CC}.Debug|x86.ActiveCfg = Debug|x86
+		{88F1DBD8-830D-4201-8C62-2BEB165B67CC}.Debug|x86.Build.0 = Debug|x86
+		{88F1DBD8-830D-4201-8C62-2BEB165B67CC}.Release|x86.ActiveCfg = Release|x86
+		{88F1DBD8-830D-4201-8C62-2BEB165B67CC}.Release|x86.Build.0 = Release|x86
+		{1ABC5F49-06BB-4F24-84F6-3F24AB9A4912}.Debug|x86.ActiveCfg = Debug
+		{1ABC5F49-06BB-4F24-84F6-3F24AB9A4912}.Release|x86.ActiveCfg = Release
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {A4EE0B15-DACA-4726-B16F-3F0167DF5A1D}
+	EndGlobalSection
+EndGlobal
