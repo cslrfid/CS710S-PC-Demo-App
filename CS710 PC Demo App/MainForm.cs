@@ -27,11 +27,17 @@ namespace CS710_PC_Client
 
         bool m_Connected = false;
         bool m_isBL = false;
-        static bool m_AutoReconnect = false;
+        static bool m_AutoReconnect = true;
         private UpdateProgressForm progressform = null;
         private string m_SN;
         bool m_stopRfidDecode = true;
         bool m_stopReceive = true;
+
+        // Firmware versions captured from the reader during Connect(), used by the
+        // automated firmware-upgrade flow.
+        string m_atmelVersion = "";
+        string m_btVersion = "";
+        volatile bool m_autoUpgradeRunning = false;
 
         readonly object locker = new object();
 
@@ -52,9 +58,29 @@ namespace CS710_PC_Client
 
             UsbNotification.RegisterUsbDeviceNotification(this.Handle);
             EnableDeviceCtrls(false);
+            HideAllButtons(this);
             UpdateDeviceList();
 
             progressform = new UpdateProgressForm();
+
+            // Auto-connect if a reader is already attached at launch (no plug-in event fires
+            // for a device that was present before the app started).
+            if (cb_device.Items.Count > 0)
+            {
+                if (Connect()) m_Connected = true;
+            }
+        }
+
+        // Hide every Button on the form (buttons are nested inside GroupBoxes, so recurse).
+        private void HideAllButtons(Control parent)
+        {
+            foreach (Control c in parent.Controls)
+            {
+                if (c is Button)
+                    c.Visible = false;
+                else
+                    HideAllButtons(c);
+            }
         }
 
         public static byte[] StringToByteArray(string hex)
@@ -219,7 +245,9 @@ namespace CS710_PC_Client
                             MessageBox.Show("Cannot get bluetooth firmware version.");
                         }
                     }
-                    RfidPowerOn();
+                    // Note: RFID power-on is intentionally NOT started here. Its receive/decode
+                    // threads read the same USB HID endpoint and would corrupt the firmware
+                    // upload handshake. The automated upgrade is triggered below instead.
                 }
             }
 			else
@@ -243,6 +271,9 @@ namespace CS710_PC_Client
                 else
                     // Enable the device controls
                     EnableDeviceCtrls(true);
+
+                // Kick off the automated firmware-version check / upgrade.
+                StartAutoUpgrade();
 	        }
 	        // Disconnected
 	        else
@@ -385,9 +416,10 @@ namespace CS710_PC_Client
                             return;
                         }
 
-                        tb_silab_version.Text = buffer[10].ToString() +"."+
-                                                buffer[11].ToString() +"."+
-                                                buffer[12].ToString();
+                        m_atmelVersion = buffer[10].ToString() + "." +
+                                         buffer[11].ToString() + "." +
+                                         buffer[12].ToString();
+                        tb_silab_version.Text = m_atmelVersion;
 
                         if (buffer[10] == 0 && buffer[11] == 1)
                         {
@@ -436,9 +468,10 @@ namespace CS710_PC_Client
                             return 0;
                         }
 
-                        tb_bt_version.Text = buffer[10].ToString() + "." +
-                                                buffer[11].ToString() + "." +
-                                                buffer[12].ToString();
+                        m_btVersion = buffer[10].ToString() + "." +
+                                      buffer[11].ToString() + "." +
+                                      buffer[12].ToString();
+                        tb_bt_version.Text = m_btVersion;
                     }
                     else
                         return 1;
@@ -479,6 +512,163 @@ namespace CS710_PC_Client
             {
                 MessageBox.Show("Device failed to transmit data.");
             }
+        }
+
+        // Extract the firmware version embedded in a firmware file name.
+        // e.g. "CS710ATMEL_V2.1.22.bin"          -> "2.1.22"
+        //      "CS710_CC2652R7_APP_V1.0.16.bin"  -> "1.0.16"
+        private string ExtractVersion(string fileName)
+        {
+            if (string.IsNullOrEmpty(fileName))
+                return "";
+
+            int start = fileName.LastIndexOf("_V", StringComparison.OrdinalIgnoreCase);
+            int end = fileName.LastIndexOf(".bin", StringComparison.OrdinalIgnoreCase);
+            if (start < 0 || end < 0 || end <= start + 2)
+                return "";
+
+            start += 2; // skip "_V"
+            return fileName.Substring(start, end - start).Trim();
+        }
+
+        // Launch the automated firmware-upgrade check on a background thread so the UI
+        // thread stays free to repaint the progress dialog. Re-entrancy is guarded so that
+        // rapid replug / post-reboot re-enumeration events cannot start overlapping runs.
+        private void StartAutoUpgrade()
+        {
+            if (m_autoUpgradeRunning)
+                return;
+            m_autoUpgradeRunning = true;
+            Thread t = new Thread(AutoUpgradeWorker) { IsBackground = true };
+            t.Start();
+        }
+
+        private void AutoUpgradeWorker()
+        {
+            try
+            {
+                string appFolder = Application.StartupPath;
+                string configPath = Path.Combine(appFolder, "config.txt");
+                string firmwareFolder = Path.Combine(appFolder, "firmware");
+
+                if (!File.Exists(configPath))
+                {
+                    MessageBox.Show("config.txt not found in application folder.", "Firmware Upgrade");
+                    return;
+                }
+
+                string[] lines = File.ReadAllLines(configPath);
+                if (lines.Length < 2)
+                {
+                    MessageBox.Show("config.txt must list the Atmel firmware file name on line 1 " +
+                        "and the Bluetooth firmware file name on line 2.", "Firmware Upgrade");
+                    return;
+                }
+
+                string atmelFile = lines[0].Trim();
+                string btFile = lines[1].Trim();
+                string atmelPath = Path.Combine(firmwareFolder, atmelFile);
+                string btPath = Path.Combine(firmwareFolder, btFile);
+
+                if (!File.Exists(atmelPath))
+                {
+                    MessageBox.Show("Atmel firmware file not found:\r\n" + atmelPath, "Firmware Upgrade");
+                    return;
+                }
+                if (!File.Exists(btPath))
+                {
+                    MessageBox.Show("Bluetooth firmware file not found:\r\n" + btPath, "Firmware Upgrade");
+                    return;
+                }
+
+                string atmelFileVersion = ExtractVersion(atmelFile);
+                string btFileVersion = ExtractVersion(btFile);
+
+                // Decide whether an upgrade is required.
+                if (m_isBL)
+                {
+                    // Atmel is in bootloader mode; only the Atmel firmware can be flashed now.
+                    // The reader reboots into normal mode and the next connection handles Bluetooth.
+                }
+                else
+                {
+                    bool atmelDiff = !string.Equals(m_atmelVersion, atmelFileVersion, StringComparison.OrdinalIgnoreCase);
+                    bool btDiff = !string.Equals(m_btVersion, btFileVersion, StringComparison.OrdinalIgnoreCase);
+
+                    // If either firmware differs, run BOTH upgrades (Atmel then Bluetooth).
+                    if (!atmelDiff && !btDiff)
+                    {
+                        MessageBox.Show("Firmware is already up to date.\r\n\r\n" +
+                            "Atmel: " + m_atmelVersion + "\r\n" +
+                            "Bluetooth: " + m_btVersion, "Firmware Upgrade");
+                        return;
+                    }
+                }
+
+                // Run the Atmel upgrade first.
+                bool atmelOk;
+                using (Stream atmelStream = new FileStream(atmelPath, FileMode.Open, FileAccess.Read))
+                {
+                    atmelOk = UpdateAtmelImage(atmelStream);
+                }
+
+                if (!atmelOk)
+                {
+                    HideProgress();
+                    MessageBox.Show("Firmware upgrade failed during the Atmel step.", "Firmware Upgrade");
+                    return;
+                }
+
+                if (m_isBL)
+                {
+                    // Bluetooth version was not read in bootloader mode. Stop here; the reader
+                    // reboots into normal mode and the next connection performs the full check.
+                    HideProgress();
+                    MessageBox.Show("Atmel firmware upgrade completed. Please wait for the reader to reboot.",
+                        "Firmware Upgrade");
+                    return;
+                }
+
+                // Keep a 5 second delay between the two upgrades.
+                Thread.Sleep(5000);
+
+                // Run the Bluetooth upgrade.
+                bool btOk;
+                using (Stream btStream = new FileStream(btPath, FileMode.Open, FileAccess.Read))
+                {
+                    btOk = UpdateBTImage(btStream);
+                }
+
+                if (!btOk)
+                {
+                    HideProgress();
+                    MessageBox.Show("Firmware upgrade failed during the Bluetooth step.", "Firmware Upgrade");
+                    return;
+                }
+
+                HideProgress();
+                MessageBox.Show("Firmware upgrade completed successfully.", "Firmware Upgrade");
+            }
+            catch (Exception ex)
+            {
+                HideProgress();
+                MessageBox.Show("Firmware upgrade error: " + ex.Message, "Firmware Upgrade");
+            }
+            finally
+            {
+                m_autoUpgradeRunning = false;
+            }
+        }
+
+        // Hide the (TopMost) progress dialog so a following result MessageBox is visible.
+        private void HideProgress()
+        {
+            if (this.InvokeRequired)
+            {
+                Invoke(new Action(HideProgress));
+                return;
+            }
+            progressform.Hide();
         }
 
         private int GetSN()
@@ -1100,14 +1290,15 @@ namespace CS710_PC_Client
             }
         }
 
-        private void UpdateAtmelImage(Stream stream)
+        private bool UpdateAtmelImage(Stream stream)
         {
             if (stream.Length < 350000 || stream.Length > 450000)
             {
                 MessageBox.Show("Incorrect image file size.");
-                return;
+                return false;
             }
 
+            bool success = false;
             int len, total_subpart, subpart = 0, size = (int)stream.Length - 2;
             byte[] subpartBuffer = new byte[240];
             byte[] readBuffer = new byte[256];
@@ -1145,14 +1336,14 @@ namespace CS710_PC_Client
                     else
                     {
                         MessageBox.Show("Not enough image data.");
-                        return;
+                        return false;
                     }
                 }
 
                 if (!USBSocket.TransmitData(command, command.Length))
                 {
                     MessageBox.Show("Device failed to transmit data.");
-                    return;
+                    return false;
                 }
 
                 bytesRead = 0;
@@ -1174,6 +1365,7 @@ namespace CS710_PC_Client
                             {
                                 ShowUpdatePercent(100);
                                 ShowUpdateResult(true, 5);
+                                success = true;
                                 break;
                             }
                             else
@@ -1201,6 +1393,7 @@ namespace CS710_PC_Client
                 }
             }
             stream.Close();
+            return success;
         }
 
         private void btn_atmel_bootloader_Click(object sender, EventArgs e)
@@ -1276,14 +1469,15 @@ namespace CS710_PC_Client
             }
         }
 
-        private void UpdateBTImage(Stream stream)
+        private bool UpdateBTImage(Stream stream)
         {
             if (stream.Length < 100000 || stream.Length > 150000)
             {
                 MessageBox.Show("Incorrect image file size.");
-                return;
+                return false;
             }
 
+            bool success = false;
             int len, total_subpart, subpart = 0, size = (int)stream.Length - 2;
             int timeout = 1000;
             byte[] subpartBuffer = new byte[240];
@@ -1322,14 +1516,14 @@ namespace CS710_PC_Client
                     else
                     {
                         MessageBox.Show("Not enough image data.");
-                        return;
+                        return false;
                     }
                 }
 
                 if (!USBSocket.TransmitData(command, command.Length))
                 {
                     MessageBox.Show("Device failed to transmit data.");
-                    return;
+                    return false;
                 }
 
                 bytesRead = 0;
@@ -1356,7 +1550,8 @@ namespace CS710_PC_Client
                             {
                                 ShowUpdatePercent(100);
                                 ShowUpdateResult(true, 0);
-                                break;      
+                                success = true;
+                                break;
                             }
                             else
                             {
@@ -1383,6 +1578,7 @@ namespace CS710_PC_Client
                 }
             }
             stream.Close();
+            return success;
         }
 
         private delegate void ShowUpdateResultDeleg(bool success, int wait);
