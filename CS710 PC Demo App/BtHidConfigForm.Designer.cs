@@ -56,6 +56,7 @@
             this.label6 = new System.Windows.Forms.Label();
             this.rb_fast_mode = new System.Windows.Forms.RadioButton();
             this.rb_basic_mode = new System.Windows.Forms.RadioButton();
+            this.cb_barcode_support = new System.Windows.Forms.CheckBox();
             this.groupBox2.SuspendLayout();
             this.groupBox1.SuspendLayout();
             this.groupBox3.SuspendLayout();
@@ -559,11 +560,22 @@
             this.rb_basic_mode.Text = "Basic Mode (factory default)";
             this.rb_basic_mode.UseVisualStyleBackColor = true;
             // 
+            // cb_barcode_support
+            // 
+            this.cb_barcode_support.AutoSize = true;
+            this.cb_barcode_support.Location = new System.Drawing.Point(341, 12);
+            this.cb_barcode_support.Name = "cb_barcode_support";
+            this.cb_barcode_support.Size = new System.Drawing.Size(162, 17);
+            this.cb_barcode_support.TabIndex = 65;
+            this.cb_barcode_support.Text = "Enable HID Barcode support";
+            this.cb_barcode_support.UseVisualStyleBackColor = true;
+            // 
             // BtHidConfigForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(549, 425);
+            this.Controls.Add(this.cb_barcode_support);
             this.Controls.Add(this.groupBox3);
             this.Controls.Add(this.btn_inv_config);
             this.Controls.Add(this.groupBox1);
@@ -614,6 +626,7 @@
         private System.Windows.Forms.RadioButton rb_fast_mode;
         private System.Windows.Forms.RadioButton rb_basic_mode;
         private System.Windows.Forms.Label label6;
+        private System.Windows.Forms.CheckBox cb_barcode_support;
     }
 }
 

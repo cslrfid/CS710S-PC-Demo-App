@@ -120,5 +120,6 @@ namespace CS710_PC_Client
         public const UInt16 OEM_HidSuffix2 = 0x5158;
         public const UInt16 OEM_HidIntervalDelay = 0x51F2;
         public const UInt16 OEM_HidReportPerInterval = 0x51F4;
+        public const UInt16 OEM_HidBarcodeSupport = 0x51F6;
     }
 }

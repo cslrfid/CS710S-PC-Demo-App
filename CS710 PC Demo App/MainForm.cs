@@ -1470,7 +1470,7 @@ namespace CS710_PC_Client
 
         private void UpdateRFIDImage(Stream stream)
         {
-            if (stream.Length < 100000 || stream.Length > 200000)
+            if (stream.Length < 150000 || stream.Length > 250000)
             {
                 MessageBox.Show("Incorrect image file size.");
                 return;

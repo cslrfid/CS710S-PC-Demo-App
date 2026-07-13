@@ -478,6 +478,10 @@ namespace CS710_PC_Client
                                 {
                                     UpdateReportPerInterval(((int)(data[0]) << 8) + (int)(data[1]));
                                 }
+                                else if (RFIDCommands.RFIDRegisterTable.address[cnt] == Constants.OEM_HidBarcodeSupport)
+                                {
+                                    UpdateBarcodeSupport(data[0]);
+                                }
                             }
                             UpdateInfo("Read Register Reply Packet.");
                             continue;
@@ -518,9 +522,9 @@ namespace CS710_PC_Client
             byte[] command;
             uint delay, count;
 
-            ushort[] address = new ushort[7];
-            byte[] length = new byte[7];
-            byte[,] data = new byte[7, 2];
+            ushort[] address = new ushort[8];
+            byte[] length = new byte[8];
+            byte[,] data = new byte[8, 2];
 
             address[0] = Constants.OEM_HidFormat;
             length[0] = 1;
@@ -567,7 +571,11 @@ namespace CS710_PC_Client
             data[6, 0] = (byte)(count >> 8);
             data[6, 1] = (byte)(count & 0xFF);
 
-            RFIDCommands.WriteRegisters(7, address, length, data);
+            address[7] = Constants.OEM_HidBarcodeSupport;
+            length[7] = 1;
+            data[7, 0] = cb_barcode_support.Checked ? (byte)1 : (byte)0;
+
+            RFIDCommands.WriteRegisters(8, address, length, data);
 
             if (cb_bt_mode.Checked)
                 command = BluetoothCommands.SendBtMode(1);
@@ -593,6 +601,7 @@ namespace CS710_PC_Client
             comboBox_prefix2.SelectedIndex = 0;
             comboBox_suffix1.SelectedIndex = 0;
             comboBox_suffix2.SelectedIndex = 0;
+            cb_barcode_support.Checked = false;
             btn_set_Click(null, null);
         }
 
@@ -677,8 +686,8 @@ namespace CS710_PC_Client
 
         private void get_config()
         {
-            ushort[] address = new ushort[8];
-            byte[] length = new byte[8];
+            ushort[] address = new ushort[9];
+            byte[] length = new byte[9];
 
             address[0] = Constants.REG_CurrentMode;
             length[0] = 1;
@@ -704,12 +713,15 @@ namespace CS710_PC_Client
             address[7] = Constants.OEM_HidReportPerInterval;
             length[7] = 2;
 
+            address[8] = Constants.OEM_HidBarcodeSupport;
+            length[8] = 1;
+
             RFIDCommands.RFIDRegisterTable.ClearRegisterTable();
-            for (int i = 0; i < 8; i++)
+            for (int i = 0; i < 9; i++)
             {
                 RFIDCommands.RFIDRegisterTable.AddRegisterTable(address[i], length[i], null);
             }
-            RFIDCommands.ReadRegisters(8, address, length);
+            RFIDCommands.ReadRegisters(9, address, length);
         }
 
         private delegate void UpdateModeDeleg(int mode);
@@ -721,6 +733,17 @@ namespace CS710_PC_Client
                 return;
             }
             cb_bt_mode.Checked = (mode == 0) ? false : true;
+        }
+
+        private delegate void UpdateBarcodeSupportDeleg(int support);
+        private void UpdateBarcodeSupport(int support)
+        {
+            if (this.InvokeRequired)
+            {
+                Invoke(new UpdateBarcodeSupportDeleg(UpdateBarcodeSupport), new object[] { support });
+                return;
+            }
+            cb_barcode_support.Checked = (support == 0) ? false : true;
         }
 
         private delegate void UpdateFormatDeleg(int format);

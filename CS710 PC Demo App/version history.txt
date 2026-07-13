@@ -1,3 +1,15 @@
+V1.25
+1. Add barcode support in HID configuration
+
+V1.24
+1. Add RFID firmware version 2.2.x upgrade support
+
+V1.23
+1. Add XPC1 and XPC2 support
+
+V1.22
+1. Add Gen2x autoset modes (5xxx)
+
 V1.21
 1. Improve HID fast mode stability
 

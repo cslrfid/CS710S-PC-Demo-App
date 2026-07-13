@@ -159,6 +159,8 @@
             this.btn_rxset = new System.Windows.Forms.Button();
             this.comboBox_rx_atten = new System.Windows.Forms.ComboBox();
             this.label43 = new System.Windows.Forms.Label();
+            this.col_xpc1 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.col_xpc2 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.groupBox3.SuspendLayout();
@@ -293,6 +295,8 @@
             this.lv_tag.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
             this.col_index,
             this.col_pc,
+            this.col_xpc1,
+            this.col_xpc2,
             this.col_epc,
             this.col_rssi,
             this.col_count,
@@ -324,17 +328,16 @@
             // col_epc
             // 
             this.col_epc.Text = "EPC";
-            this.col_epc.Width = 305;
+            this.col_epc.Width = 210;
             // 
             // col_rssi
             // 
             this.col_rssi.Text = "RSSI";
-            this.col_rssi.Width = 59;
             // 
             // col_count
             // 
             this.col_count.Text = "Count";
-            this.col_count.Width = 73;
+            this.col_count.Width = 40;
             // 
             // col_phasebegin
             // 
@@ -349,7 +352,7 @@
             // col_timestamp
             // 
             this.col_timestamp.Text = "Timestamp";
-            this.col_timestamp.Width = 125;
+            this.col_timestamp.Width = 110;
             // 
             // col_mb
             // 
@@ -551,7 +554,13 @@
             "4324",
             "4342",
             "4343",
-            "4382"});
+            "4382",
+            "5323",
+            "5345",
+            "5324",
+            "5342",
+            "5343",
+            "5382"});
             this.comboBox_rfmode.Location = new System.Drawing.Point(59, 77);
             this.comboBox_rfmode.Name = "comboBox_rfmode";
             this.comboBox_rfmode.Size = new System.Drawing.Size(52, 21);
@@ -1712,6 +1721,16 @@
             this.label43.TabIndex = 54;
             this.label43.Text = "Attenuator:";
             // 
+            // col_xpc1
+            // 
+            this.col_xpc1.Text = "XPC1";
+            this.col_xpc1.Width = 50;
+            // 
+            // col_xpc2
+            // 
+            this.col_xpc2.Text = "XPC2";
+            this.col_xpc2.Width = 50;
+            // 
             // RFIDForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -1884,6 +1903,8 @@
         private System.Windows.Forms.Button btn_reset_factory;
         private System.Windows.Forms.TextBox tb_max_query;
         private System.Windows.Forms.Label label42;
+        private System.Windows.Forms.ColumnHeader col_xpc1;
+        private System.Windows.Forms.ColumnHeader col_xpc2;
     }
 }
 

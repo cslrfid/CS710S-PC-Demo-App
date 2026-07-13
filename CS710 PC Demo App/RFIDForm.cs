@@ -329,12 +329,14 @@ namespace CS710_PC_Client
             Stopwatch stopwatch1 = new Stopwatch();
             Stopwatch stopwatch2 = new Stopwatch();
             byte[] PC = new byte[2];
+            byte[] XPC1 = new byte[2];
+            byte[] XPC2 = new byte[2];
             byte[] EPC = new byte[64];
             byte[] TID = new byte[32];
             float rssi;
             float phasebegin;
             float phaseend;
-            int epclen, tidlen;
+            int epclen, tidlen, xpc1_len, xpc2_len;
             int timestamp;
             int tagindex;
 
@@ -534,17 +536,30 @@ namespace CS710_PC_Client
                         {
                             PC[0] = data[15];
                             PC[1] = data[16];
-                            epclen = ((PC[0] >> 3) & 0x1f) * 2;
-                            tidlen = payload_length - 17 - epclen;
+                            xpc1_len = xpc2_len = 0;
+                            if ((PC[0] & 0x02) != 0)
+                            {
+                                xpc1_len = 2;
+                                XPC1[0] = data[17];
+                                XPC1[1] = data[18];
+                            }
+                            if (xpc1_len == 2 && (XPC1[0] & 0x80) != 0)
+                            {
+                                xpc2_len = 2;
+                                XPC2[0] = data[19];
+                                XPC2[1] = data[20];
+                            }
+                            epclen = (((PC[0] >> 3) & 0x1f) * 2) - xpc1_len - xpc2_len;
+                            tidlen = payload_length - 17 - epclen - xpc1_len - xpc2_len;
                             for (int cnt = 0; cnt < epclen; cnt++)
                             {
-                                EPC[cnt] = data[17 + cnt];
+                                EPC[cnt] = data[17 + xpc1_len + xpc2_len + cnt];
                             }
                             if (tidlen > 0)
                             {
                                 for (int cnt = 0; cnt < tidlen; cnt++)
                                 {
-                                    TID[cnt] = data[17 + epclen + cnt];
+                                    TID[cnt] = data[17 + xpc1_len + xpc2_len + epclen + cnt];
                                 }
                             }
                             timestamp = (data[0] << 24) | (data[1] << 16) | (data[2] << 8) | data[3];
@@ -553,7 +568,7 @@ namespace CS710_PC_Client
                             phasebegin = (data[6] << 8) | data[7];
                             phaseend = (data[8] << 8) | data[9];
                             tagindex = (data[13] << 8) | data[14];
-                            UpdateListView(tagindex, ByteArrayToHexString(PC, 2), ByteArrayToHexString(EPC, epclen), rssi, phasebegin, phaseend, timestamp, ByteArrayToHexString(TID, tidlen));
+                            UpdateListView(tagindex, ByteArrayToHexString(PC, 2), ByteArrayToHexString(XPC1, xpc1_len), ByteArrayToHexString(XPC2, xpc2_len), ByteArrayToHexString(EPC, epclen), rssi, phasebegin, phaseend, timestamp, ByteArrayToHexString(TID, tidlen));
                             m_totaltag++;
                             continue;
                         }
@@ -573,13 +588,26 @@ namespace CS710_PC_Client
                             byte[] MB = new byte[m_mb_length];
                             PC[0] = data[15];
                             PC[1] = data[16];
-                            epclen = ((PC[0] >> 3) & 0x1f) * 2;
+                            xpc1_len = xpc2_len = 0;
+                            if ((PC[0] & 0x02) != 0)
+                            {
+                                xpc1_len = 2;
+                                XPC1[0] = data[17];
+                                XPC1[1] = data[18];
+                            }
+                            if (xpc1_len == 2 && (XPC1[0] & 0x80) != 0)
+                            {
+                                xpc2_len = 2;
+                                XPC2[0] = data[19];
+                                XPC2[1] = data[20];
+                            }
+                            epclen = (((PC[0] >> 3) & 0x1f) * 2) - xpc1_len - xpc2_len;
                             for (cnt = 0; cnt < epclen; cnt++)
                             {
-                                EPC[cnt] = data[17 + cnt];
+                                EPC[cnt] = data[17 + xpc1_len + xpc2_len + cnt];
                             }
-                            int num_of_mb = data[17 + epclen];
-                            int data_index = 17 + epclen + 1;
+                            int num_of_mb = data[17 + xpc1_len + xpc2_len + epclen];
+                            int data_index = 17 + xpc1_len + xpc2_len + epclen + 1;
                             if (num_of_mb > 0)
                             {
                                 for (cnt = 0; cnt < m_mb_length; cnt++)
@@ -594,9 +622,9 @@ namespace CS710_PC_Client
                             phaseend = (data[8] << 8) | data[9];
                             tagindex = (data[13] << 8) | data[14];
                             if (num_of_mb > 0)
-                                UpdateListView(tagindex, ByteArrayToHexString(PC, 2), ByteArrayToHexString(EPC, epclen), rssi, phasebegin, phaseend, timestamp, ByteArrayToHexString(MB, (int)m_mb_length));
+                                UpdateListView(tagindex, ByteArrayToHexString(PC, 2), ByteArrayToHexString(XPC1, xpc1_len), ByteArrayToHexString(XPC2, xpc2_len), ByteArrayToHexString(EPC, epclen), rssi, phasebegin, phaseend, timestamp, ByteArrayToHexString(MB, (int)m_mb_length));
                             else
-                                UpdateListView(tagindex, ByteArrayToHexString(PC, 2), ByteArrayToHexString(EPC, epclen), rssi, phasebegin, phaseend, timestamp, null);
+                                UpdateListView(tagindex, ByteArrayToHexString(PC, 2), ByteArrayToHexString(XPC1, xpc1_len), ByteArrayToHexString(XPC2, xpc2_len), ByteArrayToHexString(EPC, epclen), rssi, phasebegin, phaseend, timestamp, null);
                             m_totaltag++;
                             continue;
                         }
@@ -645,7 +673,20 @@ namespace CS710_PC_Client
                             {
                                 PC[0] = data[i++];
                                 PC[1] = data[i++];
-                                epclen = ((PC[0] >> 3) & 0x1f) * 2;
+                                xpc1_len = xpc2_len = 0;
+                                if ((PC[0] & 0x02) != 0)
+                                {
+                                    xpc1_len = 2;
+                                    XPC1[0] = data[i++];
+                                    XPC1[1] = data[i++];
+                                }
+                                if (xpc1_len == 2 && (XPC1[0] & 0x80) != 0)
+                                {
+                                    xpc2_len = 2;
+                                    XPC2[0] = data[i++];
+                                    XPC2[1] = data[i++];
+                                }
+                                epclen = (((PC[0] >> 3) & 0x1f) * 2) - xpc1_len - xpc2_len;
                                 for (int cnt = 0; cnt < epclen; cnt++)
                                 {
                                     EPC[cnt] = data[i + cnt];
@@ -657,7 +698,7 @@ namespace CS710_PC_Client
                                 phasebegin = 0;
                                 phaseend = 0;
                                 tagindex = 0;
-                                UpdateListView(tagindex, ByteArrayToHexString(PC, 2), ByteArrayToHexString(EPC, epclen), rssi, phasebegin, phaseend, timestamp, "");
+                                UpdateListView(tagindex, ByteArrayToHexString(PC, 2), ByteArrayToHexString(XPC1, xpc1_len), ByteArrayToHexString(XPC2, xpc2_len), ByteArrayToHexString(EPC, epclen), rssi, phasebegin, phaseend, timestamp, "");
                                 m_totaltag++;
                             } while (i < payload_length);
                             continue;
@@ -1003,11 +1044,11 @@ namespace CS710_PC_Client
             {
                 ListViewItem listViewItem = lv_tag.Items[foundIndex];
                 listViewItem.SubItems[0].Text = tagindex.ToString();
-                listViewItem.SubItems[3].Text = rssi.ToString();
-                listViewItem.SubItems[4].Text = (Convert.ToInt32(listViewItem.SubItems[4].Text) + 1).ToString();
-                listViewItem.SubItems[5].Text = phasebegin.ToString();
-                listViewItem.SubItems[6].Text = phaseend.ToString();
-                listViewItem.SubItems[7].Text = UnixTimeStampToDateTime(timestamp).ToString();
+                listViewItem.SubItems[5].Text = rssi.ToString();
+                listViewItem.SubItems[6].Text = (Convert.ToInt32(listViewItem.SubItems[6].Text) + 1).ToString();
+                listViewItem.SubItems[7].Text = phasebegin.ToString();
+                listViewItem.SubItems[8].Text = phaseend.ToString();
+                listViewItem.SubItems[9].Text = UnixTimeStampToDateTime(timestamp).ToString();
             }
             else
             {
@@ -1015,12 +1056,12 @@ namespace CS710_PC_Client
             }
         }
 
-        private delegate void UpdateListViewDeleg(int tagindex, String PC, String EPC, float rssi, float phasebegin, float phaseend, int timestamp, String MB);
-        private void UpdateListView(int tagindex, String PC, String EPC, float rssi, float phasebegin, float phaseend, int timestamp, String MB)
+        private delegate void UpdateListViewDeleg(int tagindex, String PC, String XPC1, String XPC2, String EPC, float rssi, float phasebegin, float phaseend, int timestamp, String MB);
+        private void UpdateListView(int tagindex, String PC, String XPC1, String XPC2, String EPC, float rssi, float phasebegin, float phaseend, int timestamp, String MB)
         {
             if (this.InvokeRequired)
             {
-                Invoke(new UpdateListViewDeleg(UpdateListView), new object[] { tagindex, PC, EPC, rssi, phasebegin, phaseend, timestamp, MB });
+                Invoke(new UpdateListViewDeleg(UpdateListView), new object[] { tagindex, PC, XPC1, XPC2, EPC, rssi, phasebegin, phaseend, timestamp, MB });
                 return;
             }
 
@@ -1039,17 +1080,19 @@ namespace CS710_PC_Client
                 ListViewItem listViewItem = lv_tag.Items[foundIndex];
                 listViewItem.SubItems[0].Text = tagindex.ToString();
                 listViewItem.SubItems[1].Text = PC;
-                listViewItem.SubItems[2].Text = EPC;
-                listViewItem.SubItems[3].Text = rssi.ToString();
-                listViewItem.SubItems[4].Text = (Convert.ToInt32(listViewItem.SubItems[4].Text)+1).ToString();
-                listViewItem.SubItems[5].Text = phasebegin.ToString();
-                listViewItem.SubItems[6].Text = phaseend.ToString();
-                listViewItem.SubItems[7].Text = UnixTimeStampToDateTime(timestamp).ToString();
-                listViewItem.SubItems[8].Text = MB;
+                listViewItem.SubItems[2].Text = XPC1;
+                listViewItem.SubItems[3].Text = XPC2;
+                listViewItem.SubItems[4].Text = EPC;
+                listViewItem.SubItems[5].Text = rssi.ToString();
+                listViewItem.SubItems[6].Text = (Convert.ToInt32(listViewItem.SubItems[6].Text)+1).ToString();
+                listViewItem.SubItems[7].Text = phasebegin.ToString();
+                listViewItem.SubItems[8].Text = phaseend.ToString();
+                listViewItem.SubItems[9].Text = UnixTimeStampToDateTime(timestamp).ToString();
+                listViewItem.SubItems[10].Text = MB;
             }
             else
             {
-                string[] row = { tagindex.ToString(), PC, EPC, rssi.ToString(), "1", phasebegin.ToString(), phaseend.ToString(), UnixTimeStampToDateTime(timestamp).ToString(), MB };
+                string[] row = { tagindex.ToString(), PC, XPC1, XPC2, EPC, rssi.ToString(), "1", phasebegin.ToString(), phaseend.ToString(), UnixTimeStampToDateTime(timestamp).ToString(), MB };
                 ListViewItem listViewItem = new ListViewItem(row);
                 lv_tag.Items.Add(listViewItem);
                 UpdateTotal(count + 1);
@@ -1322,7 +1365,7 @@ namespace CS710_PC_Client
             {
                 m_stopReceive = true;
                 this.Hide();
-                using (RFIDReadForm rfidreadForm = new RFIDReadForm(lv_tag.SelectedItems[0].SubItems[2].Text))
+                using (RFIDReadForm rfidreadForm = new RFIDReadForm(lv_tag.SelectedItems[0].SubItems[4].Text))
                 {
                     rfidreadForm.ShowDialog();
                 }
