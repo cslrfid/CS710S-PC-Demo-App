@@ -252,7 +252,7 @@ namespace CS710_PC_Client
             }
 			else
 			{
-                MessageBox.Show("Failed to connect.");
+                //MessageBox.Show("Failed to connect.");
 			}
 
 	        // Connected
@@ -629,8 +629,8 @@ namespace CS710_PC_Client
                     return;
                 }
 
-                // Keep a 5 second delay between the two upgrades.
-                Thread.Sleep(5000);
+                // Keep a 8 second delay between the two upgrades.
+                Thread.Sleep(8000);
 
                 // Run the Bluetooth upgrade.
                 bool btOk;
@@ -647,7 +647,7 @@ namespace CS710_PC_Client
                 }
 
                 HideProgress();
-                MessageBox.Show("Firmware upgrade completed successfully.", "Firmware Upgrade");
+                //MessageBox.Show("Firmware upgrade completed successfully.", "Firmware Upgrade");
             }
             catch (Exception ex)
             {
