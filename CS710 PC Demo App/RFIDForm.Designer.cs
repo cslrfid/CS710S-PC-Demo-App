@@ -43,6 +43,8 @@
             this.lv_tag = new CS710_PC_Client.TListView();
             this.col_index = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.col_pc = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.col_xpc1 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.col_xpc2 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.col_epc = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.col_rssi = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.col_count = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
@@ -159,8 +161,6 @@
             this.btn_rxset = new System.Windows.Forms.Button();
             this.comboBox_rx_atten = new System.Windows.Forms.ComboBox();
             this.label43 = new System.Windows.Forms.Label();
-            this.col_xpc1 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.col_xpc2 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.groupBox3.SuspendLayout();
@@ -324,6 +324,16 @@
             // 
             this.col_pc.Text = "PC";
             this.col_pc.Width = 50;
+            // 
+            // col_xpc1
+            // 
+            this.col_xpc1.Text = "XPC1";
+            this.col_xpc1.Width = 50;
+            // 
+            // col_xpc2
+            // 
+            this.col_xpc2.Text = "XPC2";
+            this.col_xpc2.Width = 50;
             // 
             // col_epc
             // 
@@ -545,6 +555,8 @@
             "343",
             "205",
             "382",
+            "385",
+            "386",
             "1120",
             "1220",
             "1320",
@@ -555,6 +567,8 @@
             "4342",
             "4343",
             "4382",
+            "4385",
+            "4386",
             "5323",
             "5345",
             "5324",
@@ -1720,16 +1734,6 @@
             this.label43.Size = new System.Drawing.Size(59, 13);
             this.label43.TabIndex = 54;
             this.label43.Text = "Attenuator:";
-            // 
-            // col_xpc1
-            // 
-            this.col_xpc1.Text = "XPC1";
-            this.col_xpc1.Width = 50;
-            // 
-            // col_xpc2
-            // 
-            this.col_xpc2.Text = "XPC2";
-            this.col_xpc2.Width = 50;
             // 
             // RFIDForm
             // 

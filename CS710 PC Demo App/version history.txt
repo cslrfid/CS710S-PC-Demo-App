@@ -1,3 +1,9 @@
+V1.27
+1. Fix barcode decoding bug
+
+V1.26
+1. Add 385,386,4385,4386 rf mode
+
 V1.25
 1. Add barcode support in HID configuration
 

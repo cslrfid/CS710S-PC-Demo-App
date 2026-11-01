@@ -8,15 +8,19 @@ using System.Text;
 using System.Windows.Forms;
 using System.Runtime.InteropServices;
 using System.Threading;
+using System.Diagnostics;
 
 namespace CS710_PC_Client
 {
     public partial class BarcodeForm : Form
     {
         byte[] m_read_buffer = new byte[256]; // read ring buffer
+        byte[] m_barcode_buffer = new byte[4098];
+        int m_barcdoe_buffer_len = 0;
         byte m_read_buffer_size = 0;
         byte m_read_buffer_head = 0;
         byte m_read_buffer_tail = 0;
+        Stopwatch stopwatch = new Stopwatch();
 
         public BarcodeForm()
         {
@@ -123,6 +127,31 @@ namespace CS710_PC_Client
                         ClearReadBuffer();
                     }
                 }
+
+                if (stopwatch.ElapsedMilliseconds > 1000)
+                {
+                    if (m_barcdoe_buffer_len > 0)
+                    {
+                        if (m_barcode_buffer[0] == 0x02) // new prefix
+                        {
+                            string ascii = System.Text.Encoding.UTF8.GetString(m_barcode_buffer, 10, (int)(m_barcdoe_buffer_len - 18));
+
+                            tb_barcode_receive.AppendText(ascii);
+                            tb_barcode_receive.AppendText("\r\n");
+                        }
+                        else
+                        {
+                            string ascii = System.Text.Encoding.UTF8.GetString(m_barcode_buffer);
+
+                            tb_barcode_receive.AppendText(ascii);
+                            tb_barcode_receive.AppendText("\r\n");
+                        }
+                    }
+
+                    m_barcdoe_buffer_len = 0;
+                    stopwatch.Stop();
+                    stopwatch.Reset();
+                }
             }
             else
             {
@@ -225,19 +254,13 @@ namespace CS710_PC_Client
                         {
                             tb_status.Text = "Command success.";
                         }
-                        else if (buffer[0] == 0x02) // new prefix
-                        {
-                            string ascii = System.Text.Encoding.UTF8.GetString(buffer, 10, (int)(payload_len - 18));
-
-                            tb_barcode_receive.AppendText(ascii);
-                            tb_barcode_receive.AppendText("\r\n");
-                        }
                         else
                         {
-                            string ascii = System.Text.Encoding.UTF8.GetString(buffer);
-
-                            tb_barcode_receive.AppendText(ascii);
-                            tb_barcode_receive.AppendText("\r\n");
+                            for (int i = 0; i < payload_len - 2; i++)
+                            {
+                                m_barcode_buffer[m_barcdoe_buffer_len++] = buffer[i];
+                            }
+                            stopwatch.Start();
                         }
                         break;
                     case 0x9101:

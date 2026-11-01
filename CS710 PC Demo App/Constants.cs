@@ -63,6 +63,7 @@ namespace CS710_PC_Client
         public const UInt16 SCSLRFIDRegisterReset = 0x10D5;
         public const UInt16 SCSLEx10Reset = 0x10D6;
         public const UInt16 SCSLRFIDCircuitReset = 0x10D7;
+        public const UInt16 SCSLRFIDGetNoiseFloor = 0x10D8;
 
         public const UInt16 CSLPreloadEx10Image = 0x8831;
         public const UInt16 CSLImageStartBurnEx10Image = 0x8832;
@@ -106,6 +107,8 @@ namespace CS710_PC_Client
         public const UInt16 REG_AuthenticateMessage = 0x3912;
         public const UInt16 REG_AuthenticateRepLen = 0x3944;
         public const UInt16 REG_CurrentMode = 0x3952;
+        public const UInt16 REG_NoiseFloorFrequency = 0x3956;
+        public const UInt16 REG_NoiseFloorValue = 0x395A;
 
         // CSL OEM registers
         public const UInt16 OEM_ConfigEnable = 0x5040;
