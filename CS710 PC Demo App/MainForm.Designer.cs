@@ -380,7 +380,7 @@
             this.Controls.Add(this.groupBox2);
             this.Controls.Add(this.GB_Connection);
             this.Name = "MainForm";
-            this.Text = "CS710S PC Demo App 1.27 (only for CS710S)";
+            this.Text = "CS710S PC Demo App 1.28 (only for CS710S)";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.Main_FormClosing);
             this.GB_Connection.ResumeLayout(false);
             this.groupBox2.ResumeLayout(false);

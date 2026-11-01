@@ -1,3 +1,6 @@
+V1.28
+1. Fix barcode decoding bug
+
 V1.27
 1. Fix barcode decoding bug
 

@@ -128,13 +128,13 @@ namespace CS710_PC_Client
                     }
                 }
 
-                if (stopwatch.ElapsedMilliseconds > 1000)
+                if (stopwatch.ElapsedMilliseconds > 500)
                 {
                     if (m_barcdoe_buffer_len > 0)
                     {
                         if (m_barcode_buffer[0] == 0x02) // new prefix
                         {
-                            string ascii = System.Text.Encoding.UTF8.GetString(m_barcode_buffer, 10, (int)(m_barcdoe_buffer_len - 18));
+                            string ascii = System.Text.Encoding.UTF8.GetString(m_barcode_buffer, 10, (int)(m_barcdoe_buffer_len - 16));
 
                             tb_barcode_receive.AppendText(ascii);
                             tb_barcode_receive.AppendText("\r\n");
@@ -336,6 +336,7 @@ namespace CS710_PC_Client
         private void btn_barcode_clear_Click(object sender, EventArgs e)
         {
             tb_barcode_receive.Clear();
+            m_barcdoe_buffer_len = 0;
         }
 
         private void btn_trigger_Click(object sender, EventArgs e)
